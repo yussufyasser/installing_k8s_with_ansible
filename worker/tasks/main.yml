@@ -1,0 +1,10 @@
+---
+# tasks file for worker
+
+- name: Join the Kubernetes cluster
+  shell: |
+    kubeadm join {{ hostvars['master']['ansible_default_ipv4']['address'] }}:6443 \
+      --token {{ hostvars['master']['join_token'] }} \
+      --discovery-token-ca-cert-hash {{ hostvars['master']['discovery_token_ca_cert_hash'] }}
+  args:
+    creates: /etc/kubernetes/kubelet.conf
