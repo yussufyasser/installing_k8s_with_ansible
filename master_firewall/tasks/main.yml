@@ -1,0 +1,20 @@
+---
+# tasks file for master_firewall
+
+- name: Open required firewall ports for Kubernetes master
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop:
+    - 6443/tcp      # Kubernetes API server
+    - 2379-2380/tcp # etcd server client API
+    - 10250/tcp     # Kubelet API
+    - 10259/tcp     # kube-scheduler
+    - 10257/tcp     # kube-controller-manager
+
+- name: Reload firewalld to apply rules
+  service:
+    name: firewalld
+    state: reloaded

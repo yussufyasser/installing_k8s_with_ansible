@@ -1,0 +1,17 @@
+---
+# tasks file for worker_firewall
+
+- name: Open required firewall ports for Kubernetes workers
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop:
+    - 10250/tcp     # Kubelet API
+    - 30000-32767/tcp # NodePort Services
+
+- name: Reload firewalld to apply worker rules
+  service:
+    name: firewalld
+    state: reloaded
