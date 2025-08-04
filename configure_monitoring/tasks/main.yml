@@ -25,8 +25,34 @@
   ansible.builtin.command: kubectl rollout restart deployment metrics-server -n kube-system --kubeconfig=/home/yussuf/.kube/config
 
 
-- name: install helm
-  shell: curl -fsSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+- name: Check if Helm is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: helm_installed
+
+- name: Download Helm archive
+  ansible.builtin.get_url:
+    url: https://get.helm.sh/helm-v3.13.0-rc.1-linux-amd64.tar.gz
+    dest: /tmp/helm.tar.gz
+  when: not helm_installed.stat.exists
+
+- name: Extract Helm archive
+  ansible.builtin.unarchive:
+    src: /tmp/helm.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    extra_opts: [--skip-old-files]
+  when: not helm_installed.stat.exists
+
+- name: Move Helm binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: yes
+  when: not helm_installed.stat.exists
+
+
 
 - name: add ingress nginx helm repo
   ansible.builtin.command: /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
