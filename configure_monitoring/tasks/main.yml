@@ -1,0 +1,48 @@
+---
+# tasks file for configure_monitoring
+
+- name: Copy custom.yaml  
+  ansible.builtin.copy:
+    src: custom.yaml  
+    dest: /tmp/custom.yaml  
+
+- name: install metrics server
+  ansible.builtin.command: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml --kubeconfig=/home/yussuf/.kube/config
+
+
+
+- name: Patch Metrics Server to Allow Insecure TLS Connections to Kubelets
+  ansible.builtin.command: >
+    kubectl patch deployment metrics-server -n kube-system
+    --type=json
+    -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+    --kubeconfig=/home/yussuf/.kube/config
+
+
+
+
+- name: restart metrics server
+  ansible.builtin.command: kubectl rollout restart deployment metrics-server -n kube-system --kubeconfig=/home/yussuf/.kube/config
+
+
+- name: install helm
+  shell: curl -fsSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+- name: add ingress nginx helm repo
+  ansible.builtin.command: /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+
+
+- name: Add prometheus-community helm repo
+  ansible.builtin.command: /usr/local/bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+- name: update helm repo
+  ansible.builtin.command: /usr/local/bin/helm repo update
+
+
+- name: install ingress-nginx 
+  ansible.builtin.command: /usr/local/bin/helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace --set controller.service.type=NodePort --set controller.service.nodePorts.http=30080 --set controller.service.nodePorts.https=30443 --kubeconfig=/home/yussuf/.kube/config
+
+
+- name: install prometheus-stack
+  ansible.builtin.command: /usr/local/bin/helm upgrade --install  my-kube-prometheus-stack prometheus-community/kube-prometheus-stack --version 75.15.1 --namespace myprom --create-namespace -f /tmp/custom.yaml --kubeconfig=/home/yussuf/.kube/config

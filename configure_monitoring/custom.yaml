@@ -1,0 +1,17 @@
+grafana:
+  adminPassword: admin
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.web-app.com
+    paths:
+      - /
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - prometheus.web-app.com
+    paths:
+      - /

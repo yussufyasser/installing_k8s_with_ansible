@@ -1,11 +1,4 @@
         
-- name: Run on all nodes
-  hosts: all
-  become: true
-  roles:
-   - common_config_for_all_nodes
-
-
 - name: firewall config for control plane
   hosts: control_plane
   become: true
@@ -18,6 +11,12 @@
   roles:
    - worker_firewall
 
+- name: Run on all nodes
+  hosts: all
+  become: true
+  roles:
+   - common_config_for_all_nodes
+
 - name: initializing kubernetes cluster
   hosts: control_plane
   become: true
@@ -29,3 +28,9 @@
   become: true
   roles:
    - join_worker_node
+
+- name: configure monitoring 
+  hosts: control_plane
+  become: true
+  roles:
+   - configure_monitoring 

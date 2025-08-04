@@ -1,6 +1,17 @@
 ---
 # tasks file for worker_firewall
 
+- name: Ensure firewalld is installed
+  package:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is running and enabled
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 - name: Open required firewall ports for Kubernetes workers
   firewalld:
     port: "{{ item }}"
@@ -8,8 +19,20 @@
     state: enabled
     immediate: yes
   loop:
-    - 10250/tcp     # Kubelet API
-    - 30000-32767/tcp # NodePort Services
+    - 10250/tcp        # Kubelet API
+    - 30000-32767/tcp  # NodePort Services
+    - 51820/udp
+    - 4789/udp
+
+# For Calico using IP-in-IP encapsulation (default)
+- name: Allow IP-in-IP protocol for Calico (protocol 4)
+  firewalld:
+    protocol: 4
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+
 
 - name: Reload firewalld to apply worker rules
   service:

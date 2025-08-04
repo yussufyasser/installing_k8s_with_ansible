@@ -18,12 +18,18 @@
     src: /etc/kubernetes/admin.conf
     dest: /home/{{ ansible_user }}/.kube/config
     owner: "{{ ansible_user }}"
-    mode: "0644"
+    mode: "0600"
     remote_src: true
 
 
-- name: installing flannel
-  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --kubeconfig=/home/{{ ansible_user }}/.kube/config
+- name: Copy calico.yaml
+  ansible.builtin.copy:
+    src: calico.yaml
+    dest: /tmp/calico.yaml
+
+- name: Apply Calico CNI manifest
+  ansible.builtin.command: kubectl apply -f /tmp/calico.yaml --kubeconfig=/home/yussuf/.kube/config
+
 
 
 - name: Register the kubeadm join command

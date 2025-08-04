@@ -1,6 +1,17 @@
 ---
 # tasks file for master_firewall
 
+- name: Ensure firewalld is installed
+  package:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is running and enabled
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 - name: Open required firewall ports for Kubernetes master
   firewalld:
     port: "{{ item }}"
@@ -13,6 +24,19 @@
     - 10250/tcp     # Kubelet API
     - 10259/tcp     # kube-scheduler
     - 10257/tcp     # kube-controller-manager
+    - 4789/udp
+    - 51820/udp
+
+
+# For Calico using IP-in-IP encapsulation (default)
+- name: Allow IP-in-IP protocol for Calico (protocol 4)
+  firewalld:
+    protocol: 4
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+
 
 - name: Reload firewalld to apply rules
   service:
